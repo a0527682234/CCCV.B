@@ -1,0 +1,111 @@
+<?php
+
+$host = "localhost";
+$database = "my_database";
+$username = "root";
+$password = "";
+
+$pdo = new PDO("mysql:host=$host;dbname=$database", $username, $password);
+
+?>
+<?php
+
+function getCategories() {
+  global $pdo;
+
+  $sql = "SELECT * FROM categories";
+  $stmt = $pdo->query($sql);
+
+  return $stmt->fetchAll();
+}
+
+function getProducts($category_id) {
+  global $pdo;
+
+  $sql = "SELECT * FROM products WHERE category_id = :category_id";
+  $stmt = $pdo->prepare($sql);
+  $stmt->execute([":category_id" => $category_id]);
+
+  return $stmt->fetchAll();
+}
+
+function getProduct($product_id) {
+  global $pdo;
+
+  $sql = "SELECT * FROM products WHERE id = :product_id";
+  $stmt = $pdo->prepare($sql);
+  $stmt->execute([":product_id" => $product_id]);
+
+  return $stmt->fetch();
+}
+
+?>
+<?php
+
+include("config.php");
+include("functions.php");
+
+$category = $_GET["category"] ?? null; // אפשרות ברירת מחדל
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>אתר מכירות</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>האתר שלנו</h1>
+  </header>
+
+  <main>
+    <nav>
+      <?php include("navigation.php"); ?>
+    </nav>
+
+    <section class="products">
+      <?php
+      if (isset($category)) {
+        include("products.php");
+      } else {
+        echo "<h1>ברוכים הבאים!</h1>";
+        echo "<p>אנא בחרו קטגוריה מהתפריט בצד.</p>";
+      }
+      ?>
+    </section>
+  </main>
+
+</body>
+</html>
+<?php
+
+$categories = getCategories();
+
+?>
+
+<ul class="nav-list">
+  <?php foreach ($categories as $category) { ?>
+    <li><a href="index.php?category=<?php echo $category["id"]; ?>"><?php echo $category["name"]; ?></a></li>
+  <?php } ?>
+</ul>
+<?php
+
+$products = getProducts($category);
+
+?>
+
+<h2><?php echo (isset($category) ? getCategories()[$category - 1]["name"] : "כל המוצרים"); ?></h2>
+
+<div class="product-grid">
+  <?php foreach ($products as $product) { ?>
+    <div class="product-card">
+      <img src="images/<?php echo $product["image"]; ?>" alt="<?php echo $product["name"]; ?>">
+      <h3><?php echo $product["name"]; ?></h3>
+      <p><?php echo $product["price"]; ?>₪</p>
+      <a href="product.php?id=<?php echo $product["id"]; ?>">לפרטים נוספים</a>
+    </
